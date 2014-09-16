@@ -68,6 +68,9 @@ class NodeId {
   // Number of most significant bits which are common to this ID and 'other'.
   int CommonLeadingBits(const NodeId& other) const;
 
+  // Number of most significant bits which are common to this ID and 'other'.
+  int CommonLeadingBits2(const NodeId& other) const;
+
   // XOR distance between two IDs.  XOR bit to bit.
   NodeId& operator^=(const NodeId& rhs);
 

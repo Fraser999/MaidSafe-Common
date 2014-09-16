@@ -376,8 +376,43 @@ TEST(NodeIdTest, BEH_CommonLeadingBits) {
     id_as_binary.flip(i);
     NodeId modified_id{ id_as_binary.to_string(), NodeId::EncodingType::kBinary };
     EXPECT_EQ((NodeId::kSize * 8) - i - 1, kThisNode.CommonLeadingBits(modified_id));
+    EXPECT_EQ((NodeId::kSize * 8) - i - 1, kThisNode.CommonLeadingBits2(modified_id));
     id_as_binary.flip(i);
   }
+
+  //for (int x(0); x < 256; ++x) {
+  //  TLOG(kDefaultColour) << "    { ";
+  //  for (int y(0); y < 256; ++y) {
+  //    std::bitset<8> our_mismatch_char(x);
+  //    std::bitset<8> their_mismatch_char(y);
+  //    int bit_index{ 7 };
+  //    while (bit_index >= 0 && our_mismatch_char[bit_index] == their_mismatch_char[bit_index])
+  //      --bit_index;
+  //    TLOG(kDefaultColour) << 7 - bit_index << (y < 255 ? ", " : "");
+  //  }
+  //  TLOG(kDefaultColour) << (x < 255 ? " },  // NOLINT\n" : " }  // NOLINT\n");
+  //}
+
+  std::vector<NodeId> nodes;
+  for (int i(0); i < 1000; ++i)
+    nodes.emplace_back(NodeId::IdType::kRandomId);
+
+  std::chrono::steady_clock::time_point start{ std::chrono::steady_clock::now() };
+  int x;
+  for (int i(0); i < 100000; ++i) {
+    for (const auto& node : nodes)
+      x = kThisNode.CommonLeadingBits(node);
+  }
+  std::chrono::steady_clock::time_point stop{ std::chrono::steady_clock::now() };
+  TLOG(kCyan) << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << '\n';
+
+  start = std::chrono::steady_clock::now();
+  for (int i(0); i < 100000; ++i) {
+    for (const auto& node : nodes)
+      x = kThisNode.CommonLeadingBits2(node);
+  }
+  stop = std::chrono::steady_clock::now();
+  TLOG(kCyan) << std::chrono::duration_cast<std::chrono::milliseconds>(stop - start).count() << '\n';
 }
 
 }  // namespace test
