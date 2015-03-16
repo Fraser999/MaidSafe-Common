@@ -44,6 +44,29 @@ namespace test {
 
 namespace {
 
+uint32_t& rng_seed() {
+#ifdef _MSC_VER
+  // Work around high_resolution_clock being the lowest resolution clock pre-VS14
+  static uint32_t seed([] {
+    LARGE_INTEGER t;
+    QueryPerformanceCounter(&t);
+    return static_cast<uint32_t>(t.LowPart);
+  }());
+#else
+  static uint32_t seed(
+      static_cast<uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
+#endif
+  return seed;
+}
+
+template <typename IntType>
+IntType RandomInt() {
+  static std::uniform_int_distribution<IntType> distribution(std::numeric_limits<IntType>::min(),
+                                                             std::numeric_limits<IntType>::max());
+  std::lock_guard<std::mutex> lock(detail::random_number_generator_mutex());
+  return distribution(detail::random_number_generator());
+}
+
 boost::optional<fs::path> BootstrapFilePath(const fs::path& bootstrap_file_path = fs::path{""}) {
   static boost::optional<fs::path> bootstrap_file;
   if (!bootstrap_file_path.empty())
@@ -84,7 +107,7 @@ void HandleHelp(const po::variables_map& variables_map) {
 
 void HandleSeed(const po::variables_map& variables_map) {
   if (variables_map.count("seed"))
-    maidsafe::detail::set_random_number_generator_seed(variables_map["seed"].as<uint32_t>());
+    detail::set_random_number_generator_seed(variables_map["seed"].as<uint32_t>());
 }
 
 void HandleDelay(const po::variables_map& variables_map) {
@@ -98,6 +121,32 @@ void HandleBootstrapFile(const po::variables_map& variables_map) {
 }
 
 }  // unnamed namespace
+
+namespace detail {
+
+std::mt19937& random_number_generator() {
+  static std::mt19937 random_number_generator(rng_seed());
+  return random_number_generator;
+}
+
+std::mutex& random_number_generator_mutex() {
+  static std::mutex random_number_generator_mutex;
+  return random_number_generator_mutex;
+}
+
+#ifdef TESTING
+
+uint32_t random_number_generator_seed() { return rng_seed(); }
+
+void set_random_number_generator_seed(uint32_t seed) {
+  std::lock_guard<std::mutex> lock(random_number_generator_mutex());
+  rng_seed() = seed;
+  random_number_generator().seed(seed);
+}
+
+#endif
+
+}  // namespace detail
 
 TestPath CreateTestPath(std::string test_prefix) {
   if (test_prefix.empty())
@@ -148,6 +197,41 @@ void RunInParallel(int thread_count, std::function<void()> functor) {
     future.get();
 }
 
+int32_t RandomInt32() { return RandomInt<int32_t>(); }
+
+uint32_t RandomUint32() { return RandomInt<uint32_t>(); }
+
+std::string RandomString(size_t size) { return detail::GetRandomString<std::string>(size); }
+
+std::string RandomString(uint32_t min, uint32_t max) {
+  return detail::GetRandomString<std::string>((RandomUint32() % (max - min + 1)) + min);
+}
+
+std::vector<byte> RandomBytes(size_t size) {
+  return detail::GetRandomString<std::vector<byte>>(size);
+}
+
+std::vector<byte> RandomBytes(uint32_t min, uint32_t max) {
+  return detail::GetRandomString<std::vector<byte>>((RandomUint32() % (max - min + 1)) + min);
+}
+
+std::string RandomAlphaNumericString(size_t size) {
+  return detail::GetRandomAlphaNumericString<std::string>(size);
+}
+
+std::string RandomAlphaNumericString(uint32_t min, uint32_t max) {
+  return detail::GetRandomAlphaNumericString<std::string>((RandomUint32() % (max - min + 1)) + min);
+}
+
+std::vector<byte> RandomAlphaNumericBytes(size_t size) {
+  return detail::GetRandomAlphaNumericString<std::vector<byte>>(size);
+}
+
+std::vector<byte> RandomAlphaNumericBytes(uint32_t min, uint32_t max) {
+  return detail::GetRandomAlphaNumericString<std::vector<byte>>((RandomUint32() % (max - min + 1)) +
+                                                                min);
+}
+
 uint16_t GetRandomPort() {
   static std::set<uint16_t> already_used_ports;
   if (already_used_ports.size() == 10000) {
@@ -178,6 +262,8 @@ std::string GetRandomIPv6AddressAsString() {
 
 #ifdef TESTING
 
+Identity MakeIdentity() { return Identity(test::RandomBytes(identity_size)); }
+
 void HandleTestOptions(int argc, char* argv[]) {
   try {
     auto test_options(AvailableOptions());
@@ -197,13 +283,13 @@ void HandleTestOptions(int argc, char* argv[]) {
 }
 
 RandomNumberSeeder::RandomNumberSeeder()
-    : current_seed_(maidsafe::detail::random_number_generator_seed()) {}
+    : current_seed_(detail::random_number_generator_seed()) {}
 
 void RandomNumberSeeder::OnTestStart(const testing::TestInfo& /*test_info*/) {
   // We need to set the seed at the start of every test so that when we run all tests (e.g. if we
   // just run ./test_encrypt rather than using CTest where each test is run as a standalone
   // process), they don't all use the first test's seed.
-  maidsafe::detail::set_random_number_generator_seed(current_seed_);
+  detail::set_random_number_generator_seed(current_seed_);
 }
 
 void RandomNumberSeeder::OnTestEnd(const testing::TestInfo& test_info) {

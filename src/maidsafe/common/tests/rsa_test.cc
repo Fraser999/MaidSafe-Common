@@ -32,6 +32,9 @@ namespace rsa {
 
 namespace test {
 
+using maidsafe::test::RandomBytes;
+using maidsafe::test::RandomAlphaNumericString;
+
 class RsaTest : public testing::Test {
  public:
   RsaTest() : keys_() {}

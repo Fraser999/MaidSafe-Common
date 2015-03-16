@@ -273,6 +273,16 @@ PlainText InfoRetrieve(const DataParts& parts) {
   return PlainText(std::move(data));
 }
 
+std::vector<byte> RandomBytes(std::size_t size) {
+  std::vector<byte> result(size, 0);
+  random_number_generator().GenerateBlock(&result[0], size);
+  return result;
+}
+
+std::vector<byte> RandomBytes(std::uint32_t min, std::uint32_t max) {
+  return RandomBytes(random_number_generator().GenerateWord32(min, max));
+}
+
 }  // namespace crypto
 
 }  // namespace maidsafe

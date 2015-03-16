@@ -192,7 +192,7 @@ TYPED_TEST_CASE(MaidSafeErrorTest, AllErrorTypes);
 TYPED_TEST(MaidSafeErrorTest, BEH_ConstructorsAndHelpers) {
   const std::error_code kCode{make_error_code(typename EnumClass<TypeParam>::type(1))};
   make_error_condition(typename EnumClass<TypeParam>::type(1));
-  const std::string kWhat{RandomAlphaNumericString(10)};
+  const std::string kWhat{maidsafe::test::RandomAlphaNumericString(1, 100)};
 
   TypeParam error(kCode, kWhat);
   EXPECT_EQ(kCode, error.code());

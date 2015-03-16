@@ -137,19 +137,24 @@ if(TARGET check_sanitizer_blacklist)
   add_dependencies(maidsafe_common check_sanitizer_blacklist)
 endif()
 
+# Test library - used by tests and tools
+ms_add_static_library(maidsafe_test ${TestLibAllFiles})
+target_compile_definitions(maidsafe_test PRIVATE MAIDSAFE_DISABLED_TEST_RETURN_CODE=${SkipReturnCodeValue})
+target_link_libraries(maidsafe_test maidsafe_common gtest)
+
 # Signing tool
 ms_add_executable(signing_tool "Tools/Common" "${CommonSourcesDir}/tools/signing_tool.cc")
-target_link_libraries(signing_tool maidsafe_common)
+target_link_libraries(signing_tool maidsafe_test)
 
 # Qa tool
 ms_add_executable(qa_tool "Tools/Common" "${CommonSourcesDir}/tools/qa_tool.cc"
                                          "${CommonSourcesDir}/tools/tests/benchmark/sqlite3_wrapper_benchmark.cc")
-target_link_libraries(qa_tool maidsafe_common maidsafe_test)
+target_link_libraries(qa_tool maidsafe_test)
 
 # SQLite wrapper benchmark test tool
 ms_add_executable(sqlite_wrapper_benchmark "Tools/Common" "${CommonSourcesDir}/tools/sqlite_wrapper_benchmark.cc"
                                                           "${CommonSourcesDir}/tools/tests/benchmark/sqlite3_wrapper_benchmark.cc")
-target_link_libraries(sqlite_wrapper_benchmark maidsafe_common maidsafe_test)
+target_link_libraries(sqlite_wrapper_benchmark maidsafe_test)
 
 # Bootstrap file tool
 ms_add_executable(bootstrap_file_tool "Tools/Common"
@@ -162,14 +167,10 @@ ms_add_executable(address_space_tool "Tools/Common"
     "${CommonSourcesDir}/tools/address_space_tool.cc"
     "${CommonSourcesDir}/tools/address_space_tool.h")
 target_include_directories(address_space_tool PRIVATE ${PROJECT_SOURCE_DIR}/src)
-target_link_libraries(address_space_tool maidsafe_common)
+target_link_libraries(address_space_tool maidsafe_test)
 
 # Tests
 if(INCLUDE_TESTS)
-  ms_add_static_library(maidsafe_test ${TestLibAllFiles})
-  target_compile_definitions(maidsafe_test PRIVATE MAIDSAFE_DISABLED_TEST_RETURN_CODE=${SkipReturnCodeValue})
-  target_link_libraries(maidsafe_test maidsafe_common gtest)
-
   ms_add_executable(test_common "Tests/Common"
       ${CommonTestsAllFiles}
       ${CommonAuthenticationTestsAllFiles}

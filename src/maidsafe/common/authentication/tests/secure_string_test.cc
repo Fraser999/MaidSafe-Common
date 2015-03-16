@@ -295,7 +295,7 @@ TEST(SecureStringTest, BEH_GetPasswordTextBeforeFinalised) {
 TEST(SecureStringTest, BEH_CheckPasswordIsValidForAllChars) {
   Password password;
   for (size_t i(0); i != 23; ++i)
-    EXPECT_NO_THROW(password.Insert(i, static_cast<char>(RandomInt32())));
+    EXPECT_NO_THROW(password.Insert(i, static_cast<char>(maidsafe::test::RandomInt32())));
 
   ASSERT_TRUE(password.IsValid(boost::regex(".")));
 

@@ -72,6 +72,7 @@ struct Transaction {
 
  private:
   void Execute(const std::string& query);
+  void RandomSleep(int bias) const;
 
   const int kAttempts;
   bool committed;

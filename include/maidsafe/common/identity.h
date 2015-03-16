@@ -82,9 +82,6 @@ Identity MakeIdentity(const binary::String& id);
 Identity MakeIdentity(const hex::String& id);
 Identity MakeIdentity(const base64::String& id);
 
-// Creates a random Identity (mainly useful for testing).
-Identity MakeIdentity();
-
 }  // namespace maidsafe
 
 #endif  // MAIDSAFE_COMMON_IDENTITY_H_

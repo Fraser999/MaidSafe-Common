@@ -137,7 +137,7 @@ class TcpTest : public testing::Test {
   }
 
   void AddRandomMessage(std::vector<Message>& messages, std::size_t size) {
-    auto data(RandomString(size));
+    auto data(maidsafe::test::RandomString(size));
     messages.emplace_back(data.begin(), data.end());
   }
 

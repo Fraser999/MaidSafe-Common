@@ -34,9 +34,9 @@ class UserCredentialsTest : public testing::Test {
  protected:
   UserCredentialsTest()
       : user_credentials(),
-        kKeywordStr(RandomAlphaNumericBytes(1, 100)),
-        kPinValue(RandomUint32()),
-        kPasswordStr(RandomAlphaNumericBytes(1, 100)) {
+        kKeywordStr(maidsafe::test::RandomAlphaNumericBytes(1, 100)),
+        kPinValue(maidsafe::test::RandomUint32()),
+        kPasswordStr(maidsafe::test::RandomAlphaNumericBytes(1, 100)) {
     user_credentials.keyword = maidsafe::make_unique<UserCredentials::Keyword>(kKeywordStr);
     user_credentials.pin = maidsafe::make_unique<UserCredentials::Pin>(std::to_string(kPinValue));
     user_credentials.password = maidsafe::make_unique<UserCredentials::Password>(kPasswordStr);
@@ -87,7 +87,7 @@ TEST_F(UserCredentialsTest, BEH_CreateSecurePassword) {
 }
 
 TEST_F(UserCredentialsTest, FUNC_ObfuscateData) {
-  const NonEmptyString kData{RandomString(1024 * 1024)};
+  const NonEmptyString kData{maidsafe::test::RandomString(1024 * 1024)};
   const NonEmptyString kObfuscated{Obfuscate(user_credentials, kData)};
   ASSERT_TRUE(kObfuscated.IsInitialised());
   EXPECT_EQ(kObfuscated.string().size(), kData.string().size());

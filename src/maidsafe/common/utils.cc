@@ -128,54 +128,9 @@ std::basic_string<CharOut> StringToString(const std::basic_string<CharIn>& input
   return output;
 }
 
-uint32_t& rng_seed() {
-#ifdef _MSC_VER
-  // Work around high_resolution_clock being the lowest resolution clock pre-VS14
-  static uint32_t seed([] {
-    LARGE_INTEGER t;
-    QueryPerformanceCounter(&t);
-    return static_cast<uint32_t>(t.LowPart);
-  }());
-#else
-  static uint32_t seed(
-      static_cast<uint32_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count()));
-#endif
-  return seed;
-}
-
-template <typename IntType>
-IntType RandomInt() {
-  static std::uniform_int_distribution<IntType> distribution(std::numeric_limits<IntType>::min(),
-                                                             std::numeric_limits<IntType>::max());
-  std::lock_guard<std::mutex> lock(detail::random_number_generator_mutex());
-  return distribution(detail::random_number_generator());
-}
-
 }  // unnamed namespace
 
 namespace detail {
-
-std::mt19937& random_number_generator() {
-  static std::mt19937 random_number_generator(rng_seed());
-  return random_number_generator;
-}
-
-std::mutex& random_number_generator_mutex() {
-  static std::mutex random_number_generator_mutex;
-  return random_number_generator_mutex;
-}
-
-#ifdef TESTING
-
-uint32_t random_number_generator_seed() { return rng_seed(); }
-
-void set_random_number_generator_seed(uint32_t seed) {
-  std::lock_guard<std::mutex> lock(random_number_generator_mutex());
-  rng_seed() = seed;
-  random_number_generator().seed(seed);
-}
-
-#endif
 
 fs::path GetFileName(const Data::NameAndTypeId& name_and_type_id) {
   return (hex::Encode(name_and_type_id.name) + '_' + std::to_string(name_and_type_id.type_id.data));
@@ -249,38 +204,6 @@ int VersionToInt(const std::string& version) {
 std::string BytesToDecimalSiUnits(uint64_t num) { return BytesToSiUnits<DecimalUnit>(num); }
 
 std::string BytesToBinarySiUnits(uint64_t num) { return BytesToSiUnits<BinaryUnit>(num); }
-
-int32_t RandomInt32() { return RandomInt<int32_t>(); }
-
-uint32_t RandomUint32() { return RandomInt<uint32_t>(); }
-
-std::string RandomString(size_t size) { return GetRandomString<std::string>(size); }
-
-std::string RandomString(uint32_t min, uint32_t max) {
-  return GetRandomString<std::string>((RandomUint32() % (max - min + 1)) + min);
-}
-
-std::vector<byte> RandomBytes(size_t size) { return GetRandomString<std::vector<byte>>(size); }
-
-std::vector<byte> RandomBytes(uint32_t min, uint32_t max) {
-  return GetRandomString<std::vector<byte>>((RandomUint32() % (max - min + 1)) + min);
-}
-
-std::string RandomAlphaNumericString(size_t size) {
-  return GetRandomAlphaNumericString<std::string>(size);
-}
-
-std::string RandomAlphaNumericString(uint32_t min, uint32_t max) {
-  return GetRandomAlphaNumericString<std::string>((RandomUint32() % (max - min + 1)) + min);
-}
-
-std::vector<byte> RandomAlphaNumericBytes(size_t size) {
-  return GetRandomAlphaNumericString<std::vector<byte>>(size);
-}
-
-std::vector<byte> RandomAlphaNumericBytes(uint32_t min, uint32_t max) {
-  return GetRandomAlphaNumericString<std::vector<byte>>((RandomUint32() % (max - min + 1)) + min);
-}
 
 std::string WstringToString(const std::wstring& input) {
   return StringToString<wchar_t, char>(input);

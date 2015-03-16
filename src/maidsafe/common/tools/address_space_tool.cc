@@ -30,6 +30,7 @@
 #include "cereal/archives/json.hpp"
 
 #include "maidsafe/common/log.h"
+#include "maidsafe/common/test.h"
 #include "maidsafe/common/utils.h"
 
 namespace fs = boost::filesystem;
@@ -96,7 +97,7 @@ int Test::CandidateCommonLeadingBits(const Identity& candidate_node, size_t grou
 
 void Test::UpdateRank(size_t group_size) {
   std::for_each(std::begin(all_nodes_), std::begin(all_nodes_) + group_size, [](Node& node) {
-    node.rank = std::min(node.rank + (RandomInt32() % 20) + 10, 100);
+    node.rank = std::min(node.rank + (test::RandomInt32() % 20) + 10, 100);
   });
 }
 
@@ -129,7 +130,7 @@ void Test::AddNode(bool good) {
   int attempts{0};
   for (;;) {
     ++attempts;
-    Identity node_id(MakeIdentity());
+    Identity node_id(test::MakeIdentity());
     std::partial_sort(std::begin(all_nodes_), std::begin(all_nodes_) + group_size,
                       std::end(all_nodes_), [&node_id](const Node& lhs, const Node& rhs) {
       return CloserToTarget(lhs.id, rhs.id, node_id);
@@ -153,7 +154,7 @@ void Test::InitialiseNetwork() {
   all_nodes_.clear();
   all_nodes_.reserve(config_.initial_good_count);
   // Add first node
-  DoAddNode(MakeIdentity(), true, 1);
+  DoAddNode(test::MakeIdentity(), true, 1);
   // Add others
   for (size_t i(1); i < config_.initial_good_count; ++i)
     AddNode(true);
@@ -270,7 +271,7 @@ void Test::CheckLinkedAddresses() const {
   while (attempts < config_.total_random_attempts) {
     bad_groups.clear();
     ++attempts;
-    Identity target_id(MakeIdentity());
+    Identity target_id(test::MakeIdentity());
     for (size_t i(0); i < config_.bad_group_count; ++i) {
       if (i > 0)  // Hash previous target to get new linked one
         target_id = Identity(crypto::Hash<crypto::SHA512>(target_id.string()).string());

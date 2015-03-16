@@ -41,6 +41,8 @@ namespace crypto {
 
 namespace test {
 
+using maidsafe::test::RandomUint32;
+
 TEST(CryptoTest, BEH_SecurePasswordGeneration) {
   const NonEmptyString kKnownPassword1(hex::DecodeToBytes("70617373776f7264"));
   const Salt kKnownSalt1(hex::DecodeToBytes("1234567878563412"));

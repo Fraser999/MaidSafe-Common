@@ -25,7 +25,10 @@ namespace authentication {
 namespace detail {
 
 SecureString::SecureString()
-    : phrase_(GetRandomString<SafeString>(crypto::SHA512::DIGESTSIZE)),
+    : phrase_([]() -> SafeString {
+        std::vector<byte> phrase(crypto::RandomBytes(crypto::SHA512::DIGESTSIZE));
+        return SafeString(phrase.begin(), phrase.end());
+      }()),
       string_(),
       encryptor_(new Encryptor(phrase_.data(), new Encoder(new Sink(string_)))) {}
 

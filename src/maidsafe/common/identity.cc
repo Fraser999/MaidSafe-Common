@@ -126,6 +126,4 @@ Identity MakeIdentity(const base64::String& id) {
   }
 }
 
-Identity MakeIdentity() { return Identity(RandomBytes(identity_size)); }
-
 }  // namespace maidsafe

@@ -50,6 +50,8 @@ namespace test {
 namespace bi = boost::interprocess;
 namespace bp = boost::process;
 
+using maidsafe::test::RandomString;
+
 TEST(IpcTest, BEH_IpcCreate) {
   std::string a = "test string 1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
   std::string b = "test string 2xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";

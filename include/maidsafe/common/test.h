@@ -24,13 +24,16 @@
 #endif
 #include <functional>
 #include <memory>
+#include <random>
 #include <string>
 
 #include "boost/filesystem/path.hpp"
 #include "boost/optional.hpp"
 #include "gtest/gtest.h"
 
+#include "maidsafe/common/identity.h"
 #include "maidsafe/common/log.h"
+#include "maidsafe/common/types.h"
 
 namespace maidsafe {
 
@@ -49,6 +52,42 @@ TestPath CreateTestPath(std::string test_prefix = "");
 // Executes "functor" asynchronously "thread_count" times.
 void RunInParallel(int thread_count, std::function<void()> functor);
 
+// Generates a non-cryptographically-secure 32bit signed integer.
+int32_t RandomInt32();
+
+// Generates a non-cryptographically-secure 32bit unsigned integer.
+uint32_t RandomUint32();
+
+// Generates a non-cryptographically-secure random string of exact size.
+std::string RandomString(size_t size);
+
+// Generates a non-cryptographically-secure random string of random size between 'min' and 'max'
+// inclusive.
+std::string RandomString(uint32_t min, uint32_t max);
+
+// Generates a non-cryptographically-secure random byte vector of exact size.
+std::vector<byte> RandomBytes(size_t size);
+
+// Generates a non-cryptographically-secure random byte vector of random size between 'min' and
+// 'max' inclusive.
+std::vector<byte> RandomBytes(uint32_t min, uint32_t max);
+
+// Generates a non-cryptographically-secure random string of exact size containing only alphanumeric
+// characters.
+std::string RandomAlphaNumericString(size_t size);
+
+// Generates a non-cryptographically-secure random string of random size between 'min' and 'max'
+// inclusive containing only alphanumeric characters.
+std::string RandomAlphaNumericString(uint32_t min, uint32_t max);
+
+// Generates a non-cryptographically-secure random byte vector of exact size containing only
+// alphanumeric characters.
+std::vector<byte> RandomAlphaNumericBytes(size_t size);
+
+// Generates a non-cryptographically-secure random byte vector of random size between 'min' and
+// 'max' inclusive containing only alphanumeric characters.
+std::vector<byte> RandomAlphaNumericBytes(uint32_t min, uint32_t max);
+
 // Returns a random port in the range [1025, 65535].
 uint16_t GetRandomPort();
 
@@ -56,7 +95,12 @@ std::string GetRandomIPv4AddressAsString();
 
 std::string GetRandomIPv6AddressAsString();
 
+
+
 #ifdef TESTING
+
+// Creates a non-cryptographically-secure random Identity.
+Identity MakeIdentity();
 
 // Allows:
 // * the random number generator in 'utils.cc' to be seeded via the command line (makes the
@@ -116,6 +160,39 @@ class BootstrapFileHandler : public testing::EmptyTestEventListener {
 namespace detail {
 
 int ExecuteGTestMain(int argc, char* argv[]);
+
+std::mt19937& random_number_generator();
+std::mutex& random_number_generator_mutex();
+#ifdef TESTING
+uint32_t random_number_generator_seed();
+void set_random_number_generator_seed(uint32_t seed);
+#endif
+
+template <typename String>
+String GetRandomString(size_t size) {
+  std::uniform_int_distribution<> distribution(0, 255);
+  String random_string(size, 0);
+  {
+    std::lock_guard<std::mutex> lock(detail::random_number_generator_mutex());
+    std::generate(random_string.begin(), random_string.end(),
+      [&] { return distribution(detail::random_number_generator()); });
+  }
+  return random_string;
+}
+
+template <typename String>
+String GetRandomAlphaNumericString(size_t size) {
+  static const char alpha_numerics[] =
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  static std::uniform_int_distribution<> distribution(0, 61);
+  String random_string(size, 0);
+  {
+    std::lock_guard<std::mutex> lock(detail::random_number_generator_mutex());
+    for (auto it = random_string.begin(); it != random_string.end(); ++it)
+      *it = alpha_numerics[distribution(detail::random_number_generator())];
+  }
+  return random_string;
+}
 
 }  // namespace detail
 

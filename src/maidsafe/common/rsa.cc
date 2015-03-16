@@ -25,6 +25,7 @@
 #include "cryptopp/pssr.h"
 #include "cryptopp/cryptlib.h"
 
+#include "maidsafe/common/crypto.h"
 #include "maidsafe/common/log.h"
 #include "maidsafe/common/utils.h"
 
@@ -81,7 +82,7 @@ CipherText Encrypt(const PlainText& data, const PublicKey& public_key) {
   CryptoPP::RSAES_OAEP_SHA_Encryptor encryptor(public_key);
   try {
     crypto::AES256KeyAndIV local_key_and_iv(
-        RandomBytes(crypto::AES256_KeySize + crypto::AES256_IVSize));
+        crypto::RandomBytes(crypto::AES256_KeySize + crypto::AES256_IVSize));
     crypto::CipherText symm_encrypted_data(crypto::SymmEncrypt(data, local_key_and_iv));
 
     std::string encryption_key_encrypted;

@@ -33,7 +33,7 @@ void Sqlite3WrapperBenchmark::Run() {
   maidsafe::test::TestPath test_path(maidsafe::test::CreateTestPath("MaidSafe_TestUtils"));
   database_path = boost::filesystem::path(*test_path / "sqlite_wrapper_benchmark");
   for (int i(0); i < 10000; ++i)
-    ten_thousand_strings.push_back(RandomAlphaNumericString(20));
+    ten_thousand_strings.push_back(test::RandomAlphaNumericString(20));
 
   EndpointStringsSingleTransaction();
   EndpointStringsIndividualTransaction();
@@ -45,7 +45,7 @@ void Sqlite3WrapperBenchmark::Run() {
   // Datamanager use Db which have key length to be around 64, but the value is vector
   //             of IDs, miniumn to be 4, makes the value length to be at least 256
   for (int i(0); i < 10000; ++i)
-    key_value_pairs[RandomAlphaNumericString(130)] = RandomAlphaNumericString(512);
+    key_value_pairs[test::RandomAlphaNumericString(130)] = test::RandomAlphaNumericString(512);
 
   KeyValueIndividualTransaction();
   // When SQLite bing used for personas, each persona can has its own table or even database.
@@ -320,8 +320,8 @@ void Sqlite3WrapperBenchmark::KeyValueConcurrentUpdates() {
       {
         std::lock_guard<std::mutex> lock{mutex};
         LOG(kVerbose) << index;
-        std::advance(itr, RandomInt32() % key_value_pairs.size());
-        key_value_pairs[itr->first] = RandomAlphaNumericString(512);
+        std::advance(itr, test::RandomInt32() % key_value_pairs.size());
+        key_value_pairs[itr->first] = test::RandomAlphaNumericString(512);
         ++index;
       }
       sqlite::Transaction transaction{database};

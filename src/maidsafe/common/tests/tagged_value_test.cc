@@ -40,6 +40,8 @@ namespace detail {
 
 namespace test {
 
+using maidsafe::test::RandomAlphaNumericString;
+
 struct TestTag;
 
 template <typename T>
@@ -54,7 +56,7 @@ class TaggedValueTest : public testing::Test {
           return (t1 < t2) ? std::make_pair(t1, t2) : std::make_pair(t2, t1);
         }()) {}
   // For numeric types
-  T RandomValue() { return static_cast<T>(RandomUint32()); }
+  T RandomValue() { return static_cast<T>(maidsafe::test::RandomUint32()); }
 
   testing::AssertionResult Matches(T expected, T actual) {
     return (expected == actual) ? testing::AssertionSuccess() : testing::AssertionFailure();
@@ -64,12 +66,12 @@ class TaggedValueTest : public testing::Test {
 
 template <>
 std::string TaggedValueTest<std::string>::RandomValue() {
-  return RandomAlphaNumericString(10);
+  return maidsafe::test::RandomAlphaNumericString(10);
 }
 
 template <>
 Identity TaggedValueTest<Identity>::RandomValue() {
-  return Identity{RandomAlphaNumericString(64)};
+  return Identity{maidsafe::test::RandomAlphaNumericString(64)};
 }
 
 using TestTypes =

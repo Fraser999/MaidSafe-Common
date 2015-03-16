@@ -33,7 +33,7 @@ namespace maidsafe {
 namespace sqlite {
 
 Database::Database(const boost::filesystem::path& filename, Mode mode)
-  : database(nullptr), insertlimit(-1) {
+    : database(nullptr), insertlimit(-1) {
   auto flags = static_cast<int>(mode);
   if (sqlite3_open_v2(filename.string().c_str(), &database, flags, NULL) != SQLITE_OK) {
     LOG(kError) << "Could not open DB at: " << filename << ".  Error: " << sqlite3_errmsg(database);
@@ -73,8 +73,7 @@ Transaction::Transaction(Database& database_in) : kAttempts(200), database(datab
       if (error.code() == make_error_code(CommonErrors::db_not_present))
         throw;
       else
-        std::this_thread::sleep_for(
-            std::chrono::milliseconds(RandomUint32() % 200 + RandomUint32() % ((i + 1) * 10) + 10));
+        RandomSleep(i);
     }
   }
   LOG(kError) << "Failed to acquire DB lock in " << kAttempts << " attempts";
@@ -100,8 +99,7 @@ void Transaction::Commit() {
     } catch (const std::exception& e) {
       LOG(kWarning) << "Transaction::Commit failed in attempt " << i << " with error "
                     << boost::diagnostic_information(e);
-      std::this_thread::sleep_for(
-          std::chrono::milliseconds(RandomUint32() % 200 + RandomUint32() % ((i + 1) * 10) + 10));
+      RandomSleep(i);
     }
   }
   LOG(kError) << "Failed to acquire DB lock in " << kAttempts << " attempts";
@@ -130,6 +128,12 @@ void Transaction::Execute(const std::string& query) {
   }
 }
 
+void Transaction::RandomSleep(int bias) const {
+  std::this_thread::sleep_for(std::chrono::milliseconds(
+      crypto::random_number_generator().GenerateWord32() % 200 +
+      crypto::random_number_generator().GenerateWord32() % ((bias + 1) * 10) + 10));
+}
+
 Statement::Statement(Database& database_in, const std::string& query)
     : database(database_in), statement() {
   assert(query.size() < std::numeric_limits<int>::max() - 1);
@@ -155,10 +159,10 @@ Statement::~Statement() {
 
 void Statement::BindText(int row_index, const std::string& text) {
   assert(text.size() < std::numeric_limits<int>::max());
-  auto return_value = sqlite3_bind_text(statement, row_index, text.c_str(),
-                                        static_cast<int>(text.size()),
-                                        reinterpret_cast<sqlite3_destructor_type>(-1));
-                                        // SQLITE_TRANSIENT macro replaced with C++ cast
+  auto return_value =
+      sqlite3_bind_text(statement, row_index, text.c_str(), static_cast<int>(text.size()),
+                        reinterpret_cast<sqlite3_destructor_type>(-1));
+  // SQLITE_TRANSIENT macro replaced with C++ cast
   if (return_value != SQLITE_OK) {
     LOG(kError) << "sqlite3_bind_text returned: " << return_value << " - "
                 << sqlite3_errmsg(database.database);
@@ -168,10 +172,10 @@ void Statement::BindText(int row_index, const std::string& text) {
 
 void Statement::BindBlob(int row_index, const SerialisedData& blob) {
   assert(blob.size() < std::numeric_limits<int>::max());
-  auto return_value = sqlite3_bind_blob(statement, row_index, &blob[0],
-                                        static_cast<int>(blob.size()),
-                                        reinterpret_cast<sqlite3_destructor_type>(-1));
-                                        // SQLITE_TRANSIENT macro replaced with C++ cast
+  auto return_value =
+      sqlite3_bind_blob(statement, row_index, &blob[0], static_cast<int>(blob.size()),
+                        reinterpret_cast<sqlite3_destructor_type>(-1));
+  // SQLITE_TRANSIENT macro replaced with C++ cast
   if (return_value != SQLITE_OK) {
     LOG(kError) << "sqlite3_bind_blob returned: " << return_value << " - "
                 << sqlite3_errmsg(database.database);

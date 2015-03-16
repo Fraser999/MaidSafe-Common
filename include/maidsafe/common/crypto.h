@@ -187,6 +187,13 @@ DataParts InfoDisperse(int32_t threshold, int32_t number_of_shares, const PlainT
 
 PlainText InfoRetrieve(const DataParts& parts);
 
+// Generates a cryptographically-secure random byte vector of exact size.
+std::vector<byte> RandomBytes(std::size_t size);
+
+// Generates a cryptographically-secure random byte vector of cryptographically-secure random size
+// between 'min' and 'max' inclusive.
+std::vector<byte> RandomBytes(std::uint32_t min, std::uint32_t max);
+
 }  // namespace crypto
 
 }  // namespace maidsafe

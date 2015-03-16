@@ -36,6 +36,9 @@ namespace detail {
 
 namespace test {
 
+using maidsafe::test::RandomBytes;
+using maidsafe::test::RandomString;
+
 template <typename T>
 class BoundedStringTest : public testing::Test {
  protected:

@@ -24,7 +24,6 @@
 #include <functional>
 #include <memory>
 #include <mutex>
-#include <random>
 #include <string>
 #include <vector>
 
@@ -64,12 +63,6 @@ class Spinlock {
   std::atomic<bool> flag;
 };
 
-std::mt19937& random_number_generator();
-std::mutex& random_number_generator_mutex();
-#ifdef TESTING
-uint32_t random_number_generator_seed();
-void set_random_number_generator_seed(uint32_t seed);
-#endif
 boost::filesystem::path GetFileName(const Data::NameAndTypeId& name_and_type_id);
 Data::NameAndTypeId GetDataNameAndTypeId(const boost::filesystem::path& file_name);
 
@@ -125,69 +118,6 @@ inline void Initialise(RandomContext *x, u4 seed) {
 }
 
 }  // namespace small_prng
-
-// Generates a non-cryptographically-secure 32bit signed integer.
-int32_t RandomInt32();
-
-// Generates a non-cryptographically-secure 32bit unsigned integer.
-uint32_t RandomUint32();
-
-// Generates a non-cryptographically-secure random string of exact size.
-std::string RandomString(size_t size);
-
-// Generates a non-cryptographically-secure random string of random size between 'min' and 'max'
-// inclusive.
-std::string RandomString(uint32_t min, uint32_t max);
-
-// Generates a non-cryptographically-secure random byte vector of exact size.
-std::vector<byte> RandomBytes(size_t size);
-
-// Generates a non-cryptographically-secure random byte vector of random size between 'min' and
-// 'max' inclusive.
-std::vector<byte> RandomBytes(uint32_t min, uint32_t max);
-
-// Generates a non-cryptographically-secure random string of exact size.
-template <typename String>
-String GetRandomString(size_t size) {
-  std::uniform_int_distribution<> distribution(0, 255);
-  String random_string(size, 0);
-  {
-    std::lock_guard<std::mutex> lock(detail::random_number_generator_mutex());
-    std::generate(random_string.begin(), random_string.end(),
-                  [&] { return distribution(detail::random_number_generator()); });
-  }
-  return random_string;
-}
-
-// Generates a non-cryptographically-secure random string of exact size containing only alphanumeric
-// characters.
-std::string RandomAlphaNumericString(size_t size);
-
-// Generates a non-cryptographically-secure random string of random size between 'min' and 'max'
-// inclusive containing only alphanumeric characters.
-std::string RandomAlphaNumericString(uint32_t min, uint32_t max);
-
-// Generates a non-cryptographically-secure random byte vector of exact size containing only
-// alphanumeric characters.
-std::vector<byte> RandomAlphaNumericBytes(size_t size);
-
-// Generates a non-cryptographically-secure random byte vector of random size between 'min' and
-// 'max' inclusive containing only alphanumeric characters.
-std::vector<byte> RandomAlphaNumericBytes(uint32_t min, uint32_t max);
-
-template <typename String>
-String GetRandomAlphaNumericString(size_t size) {
-  static const char alpha_numerics[] =
-      "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-  static std::uniform_int_distribution<> distribution(0, 61);
-  String random_string(size, 0);
-  {
-    std::lock_guard<std::mutex> lock(detail::random_number_generator_mutex());
-    for (auto it = random_string.begin(); it != random_string.end(); ++it)
-      *it = alpha_numerics[distribution(detail::random_number_generator())];
-  }
-  return random_string;
-}
 
 #ifdef MAIDSAFE_WIN32
 // Throws if any char of 'input' can't be converted.

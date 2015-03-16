@@ -76,7 +76,10 @@ class SecureString {
 
 template <typename StringType>
 SecureString::SecureString(const StringType& string)
-    : phrase_(GetRandomString<SafeString>(crypto::SHA512::DIGESTSIZE)),
+    : phrase_([]() -> SafeString {
+        std::vector<byte> phrase(crypto::RandomBytes(crypto::SHA512::DIGESTSIZE));
+        return SafeString(phrase.begin(), phrase.end());
+      }()),
       string_(),
       encryptor_(new Encryptor(phrase_.data(), new Encoder(new Sink(string_)))) {
   encryptor_->Put(reinterpret_cast<const byte*>(string.data()), string.size());
@@ -137,7 +140,10 @@ class SecureInputString {
 template <typename Predicate, SecureString::size_type Size, typename Tag>
 SecureInputString<Predicate, Size, Tag>::SecureInputString()
     : encrypted_chars_(),
-      phrase_(GetRandomString<SafeString>(crypto::SHA512::DIGESTSIZE)),
+      phrase_([]() -> SafeString {
+        std::vector<byte> phrase(crypto::RandomBytes(crypto::SHA512::DIGESTSIZE));
+        return SafeString(phrase.begin(), phrase.end());
+      }()),
       secure_string_(),
       finalised_(false) {}
 
@@ -145,7 +151,10 @@ template <typename Predicate, SecureString::size_type Size, typename Tag>
 template <typename StringType>
 SecureInputString<Predicate, Size, Tag>::SecureInputString(const StringType& string)
     : encrypted_chars_(),
-      phrase_(GetRandomString<SafeString>(crypto::SHA512::DIGESTSIZE)),
+      phrase_([]() -> SafeString {
+        std::vector<byte> phrase(crypto::RandomBytes(crypto::SHA512::DIGESTSIZE));
+        return SafeString(phrase.begin(), phrase.end());
+      }()),
       secure_string_(string),
       finalised_(true) {
   if (!Predicate()(string.size(), Size)) {
